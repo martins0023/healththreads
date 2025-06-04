@@ -1,0 +1,150 @@
+// components/Layout.jsx
+import { useRouter } from "next/router";
+import Link from "next/link";
+import {
+    Home,
+    MessageCircle,
+    MapPin,
+    Bell,
+    Users,
+    User,
+    Search,
+    UserCircleIcon,
+    SearchIcon,
+  } from "lucide-react";
+import { BellIcon, ChatBubbleBottomCenterIcon, HomeIcon, MapIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+
+export default function Layout({ children }) {
+  const router = useRouter();
+  const currentPath = router.pathname;
+
+  // Basic array of nav items (icon + label + href).
+  const navItems = [
+    { name: "Home", href: "/", Icon: HomeIcon },
+    { name: "Message", href: "/messages", Icon: ChatBubbleBottomCenterIcon },
+    { name: "Map", href: "/map", Icon: MapIcon },
+    { name: "Notifications", href: "/notifications", Icon: BellIcon },
+    { name: "Communities", href: "/communities", Icon: UserGroupIcon },
+  ];
+  return (
+    <div className="min-h-screen flex bg-gray-50">
+      {/* ---------- DESKTOP SIDEBAR (md and up) ---------- */}
+      <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-white border-r border-gray-200">
+        <div className="flex items-center h-16 px-6 border-b border-gray-200">
+          {/* Placeholder for Logo */}
+          <h1 className="text-xl font-semibold text-indigo-600">HealthThread</h1>
+        </div>
+
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          {navItems.map(({ name, href, Icon }) => {
+            const isActive = currentPath === href;
+            return (
+              <Link key={name} href={href}
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md
+                    ${isActive
+                      ? "bg-indigo-100 text-indigo-700"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"}
+                  `}
+                >
+                  <Icon
+                    className={`flex-shrink-0 h-6 w-6 mr-3 ${
+                      isActive ? "text-indigo-600" : "text-gray-500 group-hover:text-gray-700"
+                    }`}
+                  />
+                  <span className="">{name}</span>
+                
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="px-4 py-4 border-t border-gray-200">
+          {/* Profile Link */}
+          <Link href="/profile" className="flex items-center space-x-3">
+              <UserCircleIcon className="h-8 w-8 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-800">Your Profile</p>
+                <p className="text-xs text-gray-500 truncate">View settings</p>
+              </div>
+          </Link>
+        </div>
+      </aside>
+
+      {/* ---------- MAIN CONTENT (push right on desktop) ---------- */}
+      <div className="flex flex-col flex-1 md:pl-64">
+        {/* Top bar */}
+        <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+            {/* Left: Search / Tabs */}
+            <div className="flex-1 flex items-center space-x-4">
+              <div className="relative w-full max-w-xs">
+                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                  <SearchIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search HealthThread…"
+                  className="block w-full pl-8 pr-3 py-2 border border-gray-300 bg-white rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* “Latest | Trending | Just Watched” tabs */}
+              <div className="hidden sm:flex space-x-6">
+                <button className="text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 pb-1">
+                  Latest
+                </button>
+                <button className="text-sm font-medium text-gray-600 hover:text-gray-800 pb-1">
+                  Trending
+                </button>
+                <button className="text-sm font-medium text-gray-600 hover:text-gray-800 pb-1">
+                  Just Watched
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Post Button & Profile Icon */}
+            <div className="flex items-center space-x-4">
+              <Link href="/create-post" className=" hidden md:inline items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                  New Post
+              </Link>
+
+              <Link href="/profile" className="flex-shrink-0">
+                  <img
+                    className="h-8 w-8 rounded-full"
+                    src="/avatars/default-pic.jpg"
+                    alt="Profile"
+                  />
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+          {children}
+        </main>
+      </div>
+
+      {/* ---------- MOBILE BOTTOM NAV (shown on < md) ---------- */}
+      <nav className="fixed inset-x-0 bottom-0 bg-white border-t border-gray-200 md:hidden">
+        <div className="flex justify-around">
+          {navItems.map(({ name, href, Icon }) => {
+            const isActive = currentPath === href;
+            return (
+              <Link key={name} href={href} className="w-full inline-flex flex-col items-center justify-center py-2">
+                  <Icon
+                    className={`h-6 w-6 ${
+                      isActive ? "text-indigo-600" : "text-gray-400"
+                    }`}
+                  />
+                  <span className={`text-xs hidden md:inline ${isActive ? "text-indigo-600" : "text-gray-500"}`}>
+                    {name}
+                  </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}

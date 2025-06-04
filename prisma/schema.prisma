@@ -1,0 +1,230 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  email            String   @unique
+  passwordHash     String // Bcrypt or Argon2
+  name             String
+  username         String   @unique
+  bio              String?
+  avatarUrl        String?
+  isPractitioner   Boolean  @default(false) // Verified medical practitioner
+  practitionerDocs String? // URL to verifying docs (secured)
+
+  followers     Follow[]       @relation("Followers")
+  following     Follow[]       @relation("Following")
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  groups        GroupMember[]
+  notifications Notification[]
+
+  QAQuestion    QAQuestion[]
+  QAParticipant QAParticipant[]
+  QASession     QASession[]
+}
+
+model Follow {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  follower   User     @relation("Following", fields: [followerId], references: [id])
+  followerId String
+  followed   User     @relation("Followers", fields: [followedId], references: [id])
+  followedId String
+
+  @@unique([followerId, followedId]) // Ensure no duplicate follows
+}
+
+model Post {
+  id           String       @id @default(uuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  author       User         @relation(fields: [authorId], references: [id])
+  authorId     String
+  textContent  String? // optional text body
+  mediaAssets  MediaAsset[]
+  likeCount    Int          @default(0)
+  commentCount Int          @default(0)
+  repostCount  Int          @default(0)
+  isRepost     Boolean      @default(false)
+
+  // ==== Self‐relation for reposts ====
+  originalPost   Post?   @relation("Reposts", fields: [originalPostId], references: [id])
+  originalPostId String?
+  reposts        Post[]  @relation("Reposts")
+
+  comments Comment[]
+  likes    Like[]
+  hashtags HashtagOnPost[]
+
+  // For “health news,” you might tag via a “source” field:
+  isNews     Boolean @default(false)
+  newsSource String? // e.g. “Medscape,” “NEJM,” etc.
+
+  // If you later want group‐scoped posts, uncomment and use the two lines below:
+  // group       Group?         @relation(fields: [groupId], references: [id])
+  // groupId     String?
+  Group   Group?  @relation(fields: [groupId], references: [id])
+  groupId String?
+}
+
+model MediaAsset {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String
+  type        MediaType
+  url         String // S3 URL or CDN URL
+  width       Int?
+  height      Int?
+  durationSec Int? // for audio/video
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    String
+  parent    Comment?  @relation("ThreadedComments", fields: [parentId], references: [id])
+  parentId  String?
+  replies   Comment[] @relation("ThreadedComments")
+  text      String
+  likeCount Int       @default(0)
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+
+  @@unique([userId, postId]) // Single like per user per post
+}
+
+model Hashtag {
+  id    String          @id @default(uuid())
+  tag   String          @unique
+  posts HashtagOnPost[]
+}
+
+model HashtagOnPost {
+  id        String  @id @default(uuid())
+  post      Post    @relation(fields: [postId], references: [id])
+  postId    String
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id])
+  hashtagId String
+}
+
+model Group {
+  id          String        @id @default(uuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  name        String
+  description String?
+  isPrivate   Boolean       @default(false)
+  avatarUrl   String?
+  members     GroupMember[]
+  posts       Post[] // If you do group‐scoped posts, add “groupId” in Post as shown above
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  joinedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+  group    Group    @relation(fields: [groupId], references: [id])
+  groupId  String
+
+  @@unique([userId, groupId])
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  createdAt   DateTime         @default(now())
+  recipient   User             @relation(fields: [recipientId], references: [id])
+  recipientId String
+  type        NotificationType
+  data        Json // e.g. { "fromUserId": "...", "postId": "..." }
+  isRead      Boolean          @default(false)
+}
+
+enum NotificationType {
+  NEW_FOLLOW
+  NEW_LIKE
+  NEW_COMMENT
+  NEW_MESSAGE
+  QA_ANSWER
+  GROUP_INVITE
+  // etc.
+}
+
+model QASession {
+  id             String          @id @default(uuid())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  title          String
+  description    String?
+  practitioner   User            @relation(fields: [practitionerId], references: [id])
+  practitionerId String
+  participants   QAParticipant[]
+  messages       QAQuestion[] // top‐level questions
+}
+
+model QAParticipant {
+  id        String    @id @default(uuid())
+  joinedAt  DateTime  @default(now())
+  session   QASession @relation(fields: [sessionId], references: [id])
+  sessionId String
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+
+  @@unique([sessionId, userId])
+}
+
+model QAQuestion {
+  id             String       @id @default(uuid())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  session        QASession    @relation(fields: [sessionId], references: [id])
+  sessionId      String
+  author         User         @relation(fields: [authorId], references: [id])
+  authorId       String
+  text           String
+  parentQuestion QAQuestion?  @relation("QAReplies", fields: [parentId], references: [id])
+  parentId       String?
+  replies        QAQuestion[] @relation("QAReplies")
+}
+
+model HealthNews {
+  id          String   @id @default(uuid())
+  title       String
+  summary     String
+  url         String // link to external source
+  source      String // e.g. NEJM, WHO
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
