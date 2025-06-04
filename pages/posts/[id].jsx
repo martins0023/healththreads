@@ -13,14 +13,10 @@ import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
 import { HeartIcon as SolidHeart } from "@heroicons/react/24/solid";
 import Link from "next/link";
 
-/**
- * Use getServerSideProps to fetch only the post itself (not comments).
- * All comment loading is done client-side via the /api/posts/[id]/comments route.
- */
 export async function getServerSideProps(context) {
   const postId = context.params.id;
 
-  // 1. Fetch the post (including author & media)
+  // 1. Fetch post (incl. author & media)
   const post = await prisma.post.findUnique({
     where: { id: postId },
     include: {
@@ -28,12 +24,11 @@ export async function getServerSideProps(context) {
       mediaAssets: true,
     },
   });
-
   if (!post) {
     return { notFound: true };
   }
 
-  // 2. Determine if the current user liked this post (optional)
+  // 2. Check if current user liked it
   let likedByCurrentUser = false;
   try {
     const user = await getUserFromToken(context.req);
@@ -49,7 +44,7 @@ export async function getServerSideProps(context) {
 
   return {
     props: {
-      post: JSON.parse(JSON.stringify(post)), // serialize dates
+      post: JSON.parse(JSON.stringify(post)), // serialize Dates
       likedByCurrentUser,
     },
   };
@@ -60,7 +55,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
   const [allComments, setAllComments] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // 1. Fetch current user on mount
+  // Fetch current user on mount
   useEffect(() => {
     async function fetchUser() {
       const res = await fetch("/api/auth/me", { credentials: "include" });
@@ -72,7 +67,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
     fetchUser();
   }, []);
 
-  // 2. Fetch nested comments on mount (and after replies)
+  // Fetch nested comments when page loads (and after posting)
   const fetchComments = async () => {
     try {
       const res = await fetch(`/api/posts/${post.id}/comments`, {
@@ -85,12 +80,11 @@ export default function PostDetail({ post, likedByCurrentUser }) {
       console.error("Error loading comments:", err);
     }
   };
-
   useEffect(() => {
     fetchComments();
   }, [post.id]);
 
-  // 3. Toggle like logic for the post itself
+  // Like toggle for the post (optimistic)
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [liked, setLiked] = useState(likedByCurrentUser);
 
@@ -99,7 +93,8 @@ export default function PostDetail({ post, likedByCurrentUser }) {
       router.push("/signin");
       return;
     }
-    // Optimistic update
+
+    // Optimistic UI
     if (!liked) {
       setLiked(true);
       setLikeCount((c) => c + 1);
@@ -119,7 +114,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
       setLikeCount(serverCount);
     } catch (err) {
       console.error("Toggle like error:", err);
-      // Roll back if error
+      // Roll back
       if (!liked) {
         setLiked(false);
         setLikeCount((c) => c - 1);
@@ -135,23 +130,22 @@ export default function PostDetail({ post, likedByCurrentUser }) {
     <>
       <Head>
         <title>{post.author.name}’s post</title>
-        {/* Open Graph tags for sharing preview */}
+        {/* Open Graph tags */}
         <meta
           property="og:title"
           content={`${post.author.name} on HealthThreads`}
         />
         <meta
           property="og:description"
-          content={post.textContent
-            ? post.textContent.slice(0, 100)
-            : "Check out this post"}
+          content={
+            post.type === "DEEP"
+              ? post.title
+              : post.textContent.slice(0, 100) || "Check out this post"
+          }
         />
         {post.mediaAssets.length > 0 &&
           post.mediaAssets[0].type === "IMAGE" && (
-            <meta
-              property="og:image"
-              content={post.mediaAssets[0].url}
-            />
+            <meta property="og:image" content={post.mediaAssets[0].url} />
           )}
         <meta
           property="og:url"
@@ -161,10 +155,10 @@ export default function PostDetail({ post, likedByCurrentUser }) {
       </Head>
 
       <div className="max-w-2xl mx-auto py-8 space-y-6">
-        {/* Back to feed link */}
+        {/* Back to feed */}
         <div>
           <Link href="/" className="text-indigo-600 hover:underline">
-              &larr; Back to Feed
+            &larr; Back to Feed
           </Link>
         </div>
 
@@ -188,14 +182,31 @@ export default function PostDetail({ post, likedByCurrentUser }) {
             </div>
           </div>
 
-          {post.textContent && (
-            <div className="px-4 pb-4">
-              <p className="text-gray-800 text-sm leading-relaxed">
-                {post.textContent}
-              </p>
+          {/* If DEEP: show title + render HTML; else render plain text */}
+          {post.type === "DEEP" && post.title && (
+            <div className="px-4 pt-2">
+              <h2 className="text-lg font-semibold text-gray-800">
+                {post.title}
+              </h2>
             </div>
           )}
 
+          {post.type === "DEEP" ? (
+            <div
+              className="px-4 pb-4 prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: post.textContent }}
+            />
+          ) : (
+            post.textContent && (
+              <div className="px-4 pb-4">
+                <p className="text-gray-800 text-sm leading-relaxed">
+                  {post.textContent}
+                </p>
+              </div>
+            )
+          )}
+
+          {/* Media Assets */}
           {post.mediaAssets.length > 0 && (
             <div className="px-4 pb-4 space-y-4">
               {post.mediaAssets.map((media) => {
@@ -253,13 +264,13 @@ export default function PostDetail({ post, likedByCurrentUser }) {
               <span>{likeCount}</span>
             </button>
 
-            {/* Comment Count (scroll to comment section) */}
+            {/* Comment Count (scroll to comments) */}
             <button
-              onClick={() => {
+              onClick={() =>
                 document
                   .getElementById("comment-section")
-                  .scrollIntoView({ behavior: "smooth" });
-              }}
+                  .scrollIntoView({ behavior: "smooth" })
+              }
               className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none"
             >
               <svg
@@ -270,7 +281,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
                 stroke="currentColor"
               >
                 <path
-                  d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
+                  d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4-4.86 8-4.86a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
@@ -313,7 +324,8 @@ export default function PostDetail({ post, likedByCurrentUser }) {
             />
           ) : (
             <div className="text-sm text-gray-600">
-              <Link href="/signin" className="text-indigo-600 hover:underline">Sign in
+              <Link href="/signin" className="text-indigo-600 hover:underline">
+                Sign in
               </Link>{" "}
               to comment.
             </div>
@@ -323,7 +335,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
             postId={post.id}
             comments={allComments}
             currentUser={currentUser}
-            onCommentAdded={fetchComments}       
+            onCommentAdded={fetchComments}
           />
         </div>
       </div>

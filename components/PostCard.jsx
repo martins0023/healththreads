@@ -3,29 +3,25 @@
 import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { showToast } from "../lib/toast"; // ← import our toast helper
+import { showToast } from "../lib/toast";
 import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
-import { HeartIcon as SolidHeart }  from "@heroicons/react/24/solid";
+import { HeartIcon as SolidHeart } from "@heroicons/react/24/solid";
 
 export default function PostCard({ post }) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount);
 
-  // 1. On mount, check if current user has liked (optional: you can preload via getSession)
-  // For simplicity, we'll hit /api/posts/[id]/like-status (another endpoint) OR you can embed a `likedByCurrentUser` field in feed payload.
-  // Here, assume feed payload included `likedByCurrentUser`. If not, create a quick check endpoint.
+  // On mount, set `liked` from post.likedByCurrentUser (if provided)
   useEffect(() => {
     setLiked(!!post.likedByCurrentUser);
   }, [post.likedByCurrentUser]);
 
-  // 2. Toggle like
+  // Toggle like (optimistic + server)
   const toggleLike = async () => {
     if (!liked) {
-      // Optimistically increment
       setLiked(true);
       setLikeCount((c) => c + 1);
     } else {
-      // Optimistically decrement
       setLiked(false);
       setLikeCount((c) => c - 1);
     }
@@ -40,7 +36,7 @@ export default function PostCard({ post }) {
       setLikeCount(newCount);
     } catch (err) {
       console.error("Error toggling like:", err);
-      // Roll back UI
+      // Roll back
       if (!liked) {
         setLiked(false);
         setLikeCount((c) => c - 1);
@@ -51,6 +47,7 @@ export default function PostCard({ post }) {
       showToast("Could not update like", "error");
     }
   };
+
   return (
     <article className="bg-white shadow-sm rounded-lg mb-4 overflow-hidden">
       {/* Header */}
@@ -61,18 +58,35 @@ export default function PostCard({ post }) {
           className="h-10 w-10 rounded-full object-cover"
         />
         <div className="ml-3">
-          <p className="text-sm font-medium text-gray-900">{post.author.name}</p>
+          <p className="text-sm font-medium text-gray-900">
+            {post.author.name}
+          </p>
           <p className="text-xs text-gray-500">
             {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
           </p>
         </div>
       </div>
 
-      {/* Text Content */}
-      {post.textContent && (
-        <div className="px-4 pb-4">
-          <p className="text-gray-800 text-sm leading-relaxed">{post.textContent}</p>
+      {/* If DEEP: render HTML; else render plain text */}
+      {post.type === "DEEP" && post.title && (
+        <div className="px-4 pt-2">
+          <h2 className="text-lg font-semibold text-gray-800">{post.title}</h2>
         </div>
+      )}
+
+      {post.type === "DEEP" ? (
+        <div
+          className="px-4 pb-4 prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: post.textContent }}
+        />
+      ) : (
+        post.textContent && (
+          <div className="px-4 pb-4">
+            <p className="text-gray-800 text-sm leading-relaxed">
+              {post.textContent}
+            </p>
+          </div>
+        )
       )}
 
       {/* Media Assets */}
@@ -101,7 +115,10 @@ export default function PostCard({ post }) {
             }
             if (media.type === "AUDIO") {
               return (
-                <div key={media.id} className="flex items-center space-x-4 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                <div
+                  key={media.id}
+                  className="flex items-center space-x-4 bg-gray-50 p-2 rounded-lg border border-gray-200"
+                >
                   <audio controls src={media.url} className="flex-1" />
                 </div>
               );
@@ -111,42 +128,49 @@ export default function PostCard({ post }) {
         </div>
       )}
 
-      {/* Footer: Like / Comment / Share (same as before) */}
+      {/* Footer: Like / Comment / Share */}
       <div className="border-t border-gray-100 px-4 py-2 flex items-center justify-between text-sm text-gray-500">
-        <button onClick={toggleLike} className="flex items-center space-x-1 hover:text-gray-700">
-        {liked ? (
+        {/* Like */}
+        <button
+          onClick={toggleLike}
+          className="flex items-center space-x-1 hover:text-gray-700"
+        >
+          {liked ? (
             <SolidHeart className="h-5 w-5 text-red-500" />
           ) : (
             <OutlineHeart className="h-5 w-5" />
           )}
           <span>{likeCount}</span>
         </button>
-        
-        {/* Comment Button (link to post detail) */}
-        <Link href={`/posts/${post.id}`} className="flex items-center space-x-1 hover:text-gray-700">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-            </svg>
-            <span>{post.commentCount}</span>
+
+        {/* Comment (link to detail) */}
+        <Link
+          href={`/posts/${post.id}`}
+          className="flex items-center space-x-1 hover:text-gray-700"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+            />
+          </svg>
+          <span>{post.commentCount}</span>
         </Link>
 
-        {/* Share Button */}
+        {/* Share */}
         <button
           onClick={() => {
             const shareUrl = `${window.location.origin}/posts/${post.id}`;
             navigator.clipboard.writeText(shareUrl).then(() => {
-              alert("Post link copied to clipboard!");
+              showToast("Post link copied to clipboard!", "info");
             });
           }}
           className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none"

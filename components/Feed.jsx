@@ -1,4 +1,5 @@
 // components/Feed.jsx
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import PostCard from "./PostCard";
 import { useFeed } from "../lib/useFeed";
@@ -9,7 +10,8 @@ export default function Feed() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoaded, setUserLoaded] = useState(false);
-  // Customize pageSize as desired
+
+  // ——— Pagination via useFeed (returns ALL post types) ———
   const pageSize = 10;
   const {
     posts,
@@ -21,15 +23,15 @@ export default function Feed() {
     hasMore,
   } = useFeed(pageSize);
 
-  // Reference to the “load more” sentinel at the bottom
-  const observerRef = useRef();
+  // We will display only posts whose `type` matches selectedTab
+  const [selectedTab, setSelectedTab] = useState("THREAD"); // "THREAD" or "DEEP"
 
-  // When the sentinel intersects the viewport, load the next page
+  // IntersectionObserver for infinite‐scroll (unchanged)
+  const observerRef = useRef();
   const lastPostRef = useCallback(
     (node) => {
       if (isLoadingMore) return;
       if (observerRef.current) observerRef.current.disconnect();
-
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
           setSize(size + 1);
@@ -40,22 +42,22 @@ export default function Feed() {
     [isLoadingMore, setSize, size, hasMore]
   );
 
-  // Fetch current user once on mount
+  // Fetch current user once on mount (unchanged)
   useEffect(() => {
-      async function fetchUser() {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (res.ok) {
-          const { user } = await res.json();
-          setCurrentUser(user);
-        } else {
-          setCurrentUser(null);
-        }
-        setUserLoaded(true);
+    async function fetchUser() {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (res.ok) {
+        const { user } = await res.json();
+        setCurrentUser(user);
+      } else {
+        setCurrentUser(null);
       }
-      fetchUser();
-    }, []);
+      setUserLoaded(true);
+    }
+    fetchUser();
+  }, []);
 
-  // Handle error state
+  // Error / loading states
   if (error) {
     return (
       <div className="py-8 text-center text-red-500">
@@ -63,8 +65,6 @@ export default function Feed() {
       </div>
     );
   }
-
-  // If initial load is still pending
   const isLoadingInitialData = !posts.length && isValidating;
   if (isLoadingInitialData) {
     return (
@@ -73,9 +73,6 @@ export default function Feed() {
       </div>
     );
   }
-
-  // 3. If we have no posts after loading, show a “no posts” message
-  //    (This could mean the user has no timeline posts yet.)
   if (!isLoadingInitialData && posts.length === 0) {
     return (
       <div className="py-8 text-center text-gray-500">
@@ -84,43 +81,76 @@ export default function Feed() {
     );
   }
 
+  // Filter posts by type
+  const displayedPosts = posts.filter((p) => p.type === selectedTab);
+
   return (
     <div>
-      {/* If userLoaded is true but no currentUser, show a banner to sign in */}
-     {userLoaded && !currentUser && (
-       <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
-         <p>You’re not signed in. <a href="/signin" className="font-medium text-indigo-600 hover:underline">Sign in</a> to create or interact with posts.</p>
-       </div>
-     )}
-      {/* Render each post */}
-      {posts.map((post, idx) => {
-        // Skip any undefined entries just in case
-        if (!post) {
-          return null;
-        }
-        // Attach the “lastPostRef” to the final item
-        if (idx === posts.length - 1) {
+      {/* ——— “Sign in” Banner ——— */}
+      {userLoaded && !currentUser && (
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4"
+          role="alert"
+        >
+          <p>
+            You’re not signed in.{" "}
+            <a
+              href="/signin"
+              className="font-medium text-indigo-600 hover:underline"
+            >
+              Sign in
+            </a>{" "}
+            to create or interact with posts.
+          </p>
+        </div>
+      )}
+
+      {/* ——— Tabs: “Threads” vs. “Deep” ——— */}
+      <div className="flex justify-center space-x-4 mb-6">
+        <button
+          onClick={() => setSelectedTab("THREAD")}
+          className={`px-4 py-2 rounded-full text-sm ${
+            selectedTab === "THREAD"
+              ? "bg-indigo-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          Threads
+        </button>
+        <button
+          onClick={() => setSelectedTab("DEEP")}
+          className={`px-4 py-2 rounded-full text-sm ${
+            selectedTab === "DEEP"
+              ? "bg-indigo-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          Deep
+        </button>
+      </div>
+
+      {/* ——— Render posts of the selected type ——— */}
+      {displayedPosts.map((post, idx) => {
+        if (!post) return null;
+        if (idx === displayedPosts.length - 1) {
           return (
             <div key={post.id} ref={lastPostRef}>
               <PostCard post={post} />
             </div>
           );
-        } 
-        // Otherwise just render normally
+        }
         return <PostCard key={post.id} post={post} />;
       })}
 
-      {/* Loading indicator for pagination */}
+      {/* ——— Infinite‐scroll Loader & “End of feed” ——— */}
       {isLoadingMore && (
         <div className="py-4 text-center text-gray-500">
           <p>Loading more…</p>
         </div>
       )}
-
-      {/* “No more data” indicator */}
       {!hasMore && (
         <div className="py-4 text-center text-gray-500">
-          <p>You’ve reached the end of the feed.</p>
+          <p>You’ve reached the end of the {selectedTab === "THREAD" ? "Threads" : "Deep"} feed.</p>
         </div>
       )}
     </div>

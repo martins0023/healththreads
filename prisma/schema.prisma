@@ -55,6 +55,8 @@ model Post {
   author       User         @relation(fields: [authorId], references: [id])
   authorId     String
   textContent  String? // optional text body
+  title        String?     // only used when type = DEEP
+  type         PostType    @default(THREAD)
   mediaAssets  MediaAsset[]
   likeCount    Int          @default(0)
   commentCount Int          @default(0)
@@ -200,6 +202,11 @@ enum NotificationType {
   QA_ANSWER
   GROUP_INVITE
   // etc.
+}
+
+enum PostType {
+  THREAD
+  DEEP
 }
 
 model QASession {
