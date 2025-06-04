@@ -1,8 +1,56 @@
 // components/PostCard.jsx
 
 import { formatDistanceToNow } from "date-fns";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { showToast } from "../lib/toast"; // ← import our toast helper
+import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
+import { HeartIcon as SolidHeart }  from "@heroicons/react/24/solid";
 
 export default function PostCard({ post }) {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likeCount);
+
+  // 1. On mount, check if current user has liked (optional: you can preload via getSession)
+  // For simplicity, we'll hit /api/posts/[id]/like-status (another endpoint) OR you can embed a `likedByCurrentUser` field in feed payload.
+  // Here, assume feed payload included `likedByCurrentUser`. If not, create a quick check endpoint.
+  useEffect(() => {
+    setLiked(!!post.likedByCurrentUser);
+  }, [post.likedByCurrentUser]);
+
+  // 2. Toggle like
+  const toggleLike = async () => {
+    if (!liked) {
+      // Optimistically increment
+      setLiked(true);
+      setLikeCount((c) => c + 1);
+    } else {
+      // Optimistically decrement
+      setLiked(false);
+      setLikeCount((c) => c - 1);
+    }
+    try {
+      const res = await fetch(`/api/posts/${post.id}/like`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Like failed");
+      const { liked: newLiked, likeCount: newCount } = await res.json();
+      setLiked(newLiked);
+      setLikeCount(newCount);
+    } catch (err) {
+      console.error("Error toggling like:", err);
+      // Roll back UI
+      if (!liked) {
+        setLiked(false);
+        setLikeCount((c) => c - 1);
+      } else {
+        setLiked(true);
+        setLikeCount((c) => c + 1);
+      }
+      showToast("Could not update like", "error");
+    }
+  };
   return (
     <article className="bg-white shadow-sm rounded-lg mb-4 overflow-hidden">
       {/* Header */}
@@ -65,36 +113,44 @@ export default function PostCard({ post }) {
 
       {/* Footer: Like / Comment / Share (same as before) */}
       <div className="border-t border-gray-100 px-4 py-2 flex items-center justify-between text-sm text-gray-500">
-        <button className="flex items-center space-x-1 hover:text-gray-700">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M5 15l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-          </svg>
-          <span>Like</span>
+        <button onClick={toggleLike} className="flex items-center space-x-1 hover:text-gray-700">
+        {liked ? (
+            <SolidHeart className="h-5 w-5 text-red-500" />
+          ) : (
+            <OutlineHeart className="h-5 w-5" />
+          )}
+          <span>{likeCount}</span>
         </button>
-        <button className="flex items-center space-x-1 hover:text-gray-700">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-          </svg>
-          <span>Comment</span>
-        </button>
-        <button className="flex items-center space-x-1 hover:text-gray-700">
+        
+        {/* Comment Button (link to post detail) */}
+        <Link href={`/posts/${post.id}`} className="flex items-center space-x-1 hover:text-gray-700">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+            </svg>
+            <span>{post.commentCount}</span>
+        </Link>
+
+        {/* Share Button */}
+        <button
+          onClick={() => {
+            const shareUrl = `${window.location.origin}/posts/${post.id}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+              alert("Post link copied to clipboard!");
+            });
+          }}
+          className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5"

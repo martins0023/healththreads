@@ -10,6 +10,7 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useSWRConfig } from "swr";
+import { showToast } from "../lib/toast"; // ← import our toast helper
 
 export default function CreatePost() {
   const router = useRouter();
@@ -17,14 +18,14 @@ export default function CreatePost() {
 
   // 1. Redirect to /signin if not authenticated
   useEffect(() => {
-      async function checkAuth() {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (!res.ok) {
-          router.replace("/signin");
-        }
+    async function checkAuth() {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (!res.ok) {
+        router.replace("/signin");
       }
-      checkAuth();
-    }, [router]);
+    }
+    checkAuth();
+  }, [router]);
 
   // Text content
   const [text, setText] = useState("");
@@ -106,13 +107,18 @@ export default function CreatePost() {
     const uploadRes = await fetch(presignedUrl, {
       method: "PUT",
       headers: {
-                "Content-Type": file.type, //"x-amz-acl": "public-read", 
-              },
+        "Content-Type": file.type, //"x-amz-acl": "public-read",
+      },
       body: file,
     });
     if (!uploadRes.ok) {
       const text = await uploadRes.text();
-      console.error("S3 upload failed; status:", uploadRes.status, "body:", text);
+      console.error(
+        "S3 upload failed; status:",
+        uploadRes.status,
+        "body:",
+        text
+      );
       throw new Error("Failed to upload file to S3");
     }
 
@@ -172,8 +178,11 @@ export default function CreatePost() {
         false
       );
 
+      showToast("Post created", "success");
       // 4. Redirect to home
-      router.push("/");
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
     } catch (error) {
       console.error("Error creating post:", error);
       alert("There was an error creating your post. Please try again.");
@@ -183,9 +192,14 @@ export default function CreatePost() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Create a New Post</h1>
+      <h1 className="text-2xl font-semibold text-gray-800 mb-6">
+        Create a New Post
+      </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white p-6 rounded-lg shadow"
+      >
         {/* Textarea */}
         <div>
           <label htmlFor="postText" className="sr-only">
@@ -201,7 +215,9 @@ export default function CreatePost() {
             placeholder="What's on your mind?"
             className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"
           />
-          <p className="mt-1 text-right text-xs text-gray-500">{text.length} / 280</p>
+          <p className="mt-1 text-right text-xs text-gray-500">
+            {text.length} / 280
+          </p>
         </div>
 
         {/* PREVIEWS */}

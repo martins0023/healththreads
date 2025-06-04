@@ -47,6 +47,23 @@ export default async function handler(req, res) {
       },
       orderBy: { createdAt: "desc" },
     });
+
+    // 3. For each post, determine if current user liked it
+    const userId = user.id;
+    const likedMap = await prisma.like.findMany({
+      where: {
+        userId,
+        postId: { in: postIds },
+      },
+      select: { postId: true },
+    });
+    const likedSet = new Set(likedMap.map((l) => l.postId));
+
+    // 4. Attach `likedByCurrentUser` boolean to each post
+    posts = posts.map((p) => ({
+      ...p,
+      likedByCurrentUser: likedSet.has(p.id),
+    }));
   } catch (err) {
     console.error("Prisma error fetching posts:", err);
     return res.status(500).json({ error: "Failed to fetch posts" });

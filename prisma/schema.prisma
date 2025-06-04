@@ -28,6 +28,7 @@ model User {
   posts         Post[]
   comments      Comment[]
   likes         Like[]
+  commentLikes  CommentLike[]    // ← new relation field
   groups        GroupMember[]
   notifications Notification[]
 
@@ -99,18 +100,38 @@ enum MediaType {
 }
 
 model Comment {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  author    User      @relation(fields: [authorId], references: [id])
-  authorId  String
-  post      Post      @relation(fields: [postId], references: [id])
-  postId    String
-  parent    Comment?  @relation("ThreadedComments", fields: [parentId], references: [id])
-  parentId  String?
-  replies   Comment[] @relation("ThreadedComments")
-  text      String
-  likeCount Int       @default(0)
+  id          String        @id @default(uuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  author      User          @relation(fields: [authorId], references: [id])
+  authorId    String
+  post        Post          @relation(fields: [postId], references: [id])
+  postId      String
+
+  // Each comment may optionally have a parent comment → nested replies
+  parent      Comment?      @relation("ThreadedComments", fields: [parentId], references: [id])
+  parentId    String?
+  replies     Comment[]     @relation("ThreadedComments")
+
+  text        String
+  likeCount   Int           @default(0)
+
+  // New relation: a comment can have many CommentLikes (one per user)
+  commentLikes CommentLike[]
+}
+
+// New join table to record exactly which user liked which comment
+model CommentLike {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+
+  comment    Comment  @relation(fields: [commentId], references: [id])
+  commentId  String
+
+  @@unique([userId, commentId]) // ensure one‐per‐user‐per‐comment
 }
 
 model Like {
