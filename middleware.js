@@ -1,7 +1,7 @@
 // middleware.js
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "./utils/session";
+// import { verifyToken } from "./utils/session";
 import { redirect } from "next/navigation";
 
 export async function middleware(request) {
