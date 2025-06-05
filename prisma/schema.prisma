@@ -36,6 +36,8 @@ model User {
   QAQuestion    QAQuestion[]
   QAParticipant QAParticipant[]
   QASession     QASession[]
+
+  TopicFollower TopicFollower[]
 }
 
 model Follow {
@@ -183,6 +185,23 @@ model GroupMember {
   groupId  String
 
   @@unique([userId, groupId])
+}
+
+model Topic {
+  id        String          @id @default(uuid())
+  name      String          @unique
+  createdAt DateTime        @default(now())
+  followers TopicFollower[]
+}
+
+model TopicFollower {
+  id       String   @id @default(uuid())
+  topic    Topic    @relation(fields: [topicId], references: [id])
+  topicId  String
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+
+  @@unique([userId, topicId])
 }
 
 model Notification {
