@@ -10,7 +10,7 @@ import {
   PhotoIcon,
   VideoCameraIcon,
   XCircleIcon,
-  XIcon,
+  XMarkIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { showToast } from "../lib/toast";
@@ -346,7 +346,7 @@ export default function CreatePost() {
                 className="absolute top-2 right-2 bg-white p-1 rounded-full text-gray-600 hover:text-gray-800"
                 aria-label="Remove video"
               >
-                <XIcon className="h-5 w-5" />
+                <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
           )}
