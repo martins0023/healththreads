@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import CommunityCard from "../components/CommunityCard";
 import Layout from "../components/Layout";
-import { getUserFromToken } from "../lib/auth"; // for server-side auth if needed
+// import { getUserFromToken } from "../lib/auth"; // for server-side auth if needed
 
 export default function Communities() {
   const [groups, setGroups] = useState([]);
