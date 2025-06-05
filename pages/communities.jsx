@@ -1,17 +1,19 @@
 // pages/communities.jsx
 
 import { useEffect, useState } from "react";
-import CommunityCard from "../components/CommunityCard";
 import Layout from "../components/Layout";
-// import { getUserFromToken } from "../lib/auth"; // for server-side auth if needed
+import CommunityCard from "../components/CommunityCard";
+import { showToast } from "../lib/toast";
 
 export default function Communities() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch all public groups on mount
+  // 1) Fetch all public groups from our API (client‐side).
   useEffect(() => {
+    let isMounted = true; // avoid setting state after unmount
+
     async function fetchGroups() {
       setLoading(true);
       try {
@@ -21,19 +23,29 @@ export default function Communities() {
         if (!res.ok) {
           throw new Error("Failed to load communities.");
         }
-        const { groups } = await res.json();
-        setGroups(groups);
+        const json = await res.json();
+        if (isMounted) {
+          setGroups(json.groups || []);
+        }
       } catch (err) {
         console.error("Error fetching communities:", err);
-        setError("Could not load communities. Try again.");
+        if (isMounted) {
+          setError("Could not load communities. Try again.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
+
     fetchGroups();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Handler when a single group’s membership toggles
+  // 2) When one card’s “Join/Leave” toggles, update that one group in state.
   const handleToggle = (groupId, newIsMember, newCount) => {
     setGroups((prev) =>
       prev.map((g) =>
@@ -55,9 +67,7 @@ export default function Communities() {
         </p>
 
         {loading ? (
-          <div className="py-12 text-center text-gray-500">
-            Loading communities…
-          </div>
+          <div className="py-12 text-center text-gray-500">Loading communities…</div>
         ) : error ? (
           <div className="py-12 text-center text-red-500">{error}</div>
         ) : groups.length === 0 ? (
@@ -65,6 +75,7 @@ export default function Communities() {
             No communities available.
           </div>
         ) : (
+          // 3) Responsive grid: 1 column on mobile, 2 on sm, 3 on md, 4 on lg+
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {groups.map((group) => (
               <CommunityCard
