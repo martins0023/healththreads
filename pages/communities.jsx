@@ -57,7 +57,7 @@ export default function Communities() {
   };
 
   return (
-    <Layout>
+    <>
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Health Tribes & Circles
@@ -87,6 +87,6 @@ export default function Communities() {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 }
