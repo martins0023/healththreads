@@ -6,6 +6,7 @@ import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
 import { HeartIcon as SolidHeart } from "@heroicons/react/24/solid";
 import CommentForm from "./CommentForm";
 import { showToast } from "../lib/toast";
+import { enqueueRequest } from "../lib/offlineQueue";
 
 /**
  * Props:
@@ -111,12 +112,23 @@ function CommentItem({
     }
 
     // Optimistic update
-    if (!liked) {
-      setLiked(true);
-      setLikeCount((c) => c + 1);
-    } else {
-      setLiked(false);
-      setLikeCount((c) => c - 1);
+    if (!navigator.onLine) {
+      // Offline: enqueue the request rather than rejecting
+      await enqueueRequest({
+        url: `/api/comments/${comment.id}/like`,
+        method: "POST",
+        body: {},
+      });
+      // Optimistically update UI
+      if (!liked) {
+        setLiked(true);
+        setLikeCount((c) => c + 1);
+      } else {
+        setLiked(false);
+        setLikeCount((c) => c - 1);
+      }
+      showToast("You are offline. Like will be synced later.", "info");
+      return;
     }
 
     try {

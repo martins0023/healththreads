@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     posts = await prisma.post.findMany({
       where: { id: { in: postIds } },
       include: {
-        author: { select: { id: true, name: true, avatarUrl: true } },
+        author: { select: { id: true, name: true, avatarUrl: true, isPractitioner: true, } },
         mediaAssets: true,
       },
       orderBy: { createdAt: "desc" },

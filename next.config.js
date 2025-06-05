@@ -12,6 +12,15 @@ const withPWA = require("next-pwa")({
         networkTimeoutSeconds: 10,
       },
     },
+    {
+      urlPattern: /^\/api\/posts\/.*$/,
+      handler: "NetworkFirst",
+    },
+    // Cache likes/comments GET
+    {
+      urlPattern: /^\/api\/posts\/.*\/comments/,
+      handler: "NetworkFirst",
+    },
     // …other caching rules…
   ],
 });

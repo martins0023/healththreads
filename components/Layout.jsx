@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   UserCircleIcon,
   SearchIcon,
@@ -18,6 +19,28 @@ import {
 export default function Layout({ children }) {
   const router = useRouter();
   const currentPath = router.pathname;
+
+  // State to hold the current user's data
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // On mount, fetch /api/auth/me to see if the user is signed in
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (res.ok) {
+          const { user } = await res.json();
+          setCurrentUser(user);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+        setCurrentUser(null);
+      }
+    }
+    fetchUser();
+  }, []);
 
   // Basic array of nav items (icon + label + href)
   const navItems = [
@@ -64,12 +87,22 @@ export default function Layout({ children }) {
 
         <div className="px-4 py-4 border-t border-gray-200">
           <Link href="/profile" className="flex items-center space-x-3">
-            <UserCircleIcon className="h-8 w-8 text-gray-500" />
+            {/*
+              If `currentUser` is loaded and has `avatarUrl`, show it;
+              otherwise show the generic UserCircleIcon placeholder.
+            */}
+            {currentUser && currentUser.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name || "Your Profile"}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <UserCircleIcon className="h-8 w-8 text-gray-500" />
+            )}
             <div>
               <p className="text-sm font-medium text-gray-800">Your Profile</p>
-              <p className="text-xs text-gray-500 truncate">
-                View settings
-              </p>
+              <p className="text-xs text-gray-500 truncate">View settings</p>
             </div>
           </Link>
         </div>
@@ -117,11 +150,15 @@ export default function Layout({ children }) {
               </Link>
 
               <Link href="/profile" className="flex-shrink-0">
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src="/avatars/default-pic.jpg"
-                  alt="Profile"
-                />
+                {currentUser && currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.name || "Profile"}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <UserCircleIcon className="h-8 w-8 text-gray-500" />
+                )}
               </Link>
             </div>
           </div>
@@ -155,12 +192,12 @@ export default function Layout({ children }) {
               >
                 <Icon
                   className={`h-6 w-6 ${
-                    isActive ? "text-indigo-600" : "text-gray-400"
+                    isActive ? "text-indigo-950" : "text-gray-400"
                   }`}
                 />
                 <span
                   className={`text-xs hidden md:inline ${
-                    isActive ? "text-indigo-600" : "text-gray-500"
+                    isActive ? "text-indigo-800" : "text-gray-500"
                   }`}
                 >
                   {name}

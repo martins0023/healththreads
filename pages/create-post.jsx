@@ -201,9 +201,11 @@ export default function CreatePost() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">
+      <h1 className="text-xl font-semibold text-gray-800 mb-2">
         Create a New Post
       </h1>
+
+      <p className="text-sm text-gray-700 mb-4">To create a post, switch between the appropriate tag for your kind of post and create. </p>
 
       <form
         onSubmit={handleSubmit}

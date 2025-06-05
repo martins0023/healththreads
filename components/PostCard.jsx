@@ -6,8 +6,18 @@ import Link from "next/link";
 import { showToast } from "../lib/toast";
 import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
 import { HeartIcon as SolidHeart } from "@heroicons/react/24/solid";
+import { CheckBadgeIcon } from "@heroicons/react/24/solid"; // ← import the badge icon
+import { useRouter } from "next/router";
+
+function stripHtml(html) {
+  if (!html) return "";
+  // Remove anything between <...>
+  return html.replace(/<[^>]*>/g, "");
+}
 
 export default function PostCard({ post }) {
+  const router = useRouter();
+  const isDetailPage = router.pathname === "/posts/[id]";
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount);
 
@@ -58,8 +68,12 @@ export default function PostCard({ post }) {
           className="h-10 w-10 rounded-full object-cover"
         />
         <div className="ml-3">
-          <p className="text-sm font-medium text-gray-900">
+          <p className="flex items-center text-sm font-medium text-gray-900">
             {post.author.name}
+            {/* If the author is a verified practitioner, render a check badge */}
+            {post.author.isPractitioner && (
+              <CheckBadgeIcon className="h-5 w-5 text-blue-500 ml-1" />
+            )}
           </p>
           <p className="text-xs text-gray-500">
             {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
@@ -74,12 +88,43 @@ export default function PostCard({ post }) {
         </div>
       )}
 
-      {post.type === "DEEP" ? (
-        <div
-          className="px-4 pb-4 prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.textContent }}
-        />
+{post.type === "DEEP" ? (
+        isDetailPage ? (
+          // ─── On the detail page, render full HTML safely ─────────────────
+          <div
+            className="px-4 pb-4 prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: post.textContent }}
+          />
+        ) : (
+          // ─── On any other page (feed/profile/blogs tab), show a truncated preview ───
+          <div className="px-4 pb-4">
+            <p className="text-gray-800 text-sm leading-relaxed">
+              {(() => {
+                const plain = stripHtml(post.textContent || "");
+                if (plain.length <= 300) {
+                  return plain;
+                }
+                return `${plain.slice(0, 300)}... `;
+              })()}
+              {(() => {
+                const plain = stripHtml(post.textContent || "");
+                if (plain.length > 300) {
+                  return (
+                    <Link
+                      href={`/posts/${post.id}`}
+                      className="text-indigo-600 hover:underline"
+                    >
+                      Read more
+                    </Link>
+                  );
+                }
+                return null;
+              })()}
+            </p>
+          </div>
+        )
       ) : (
+        // ─── THREADS (short posts) render normal text content ─────────────────────────
         post.textContent && (
           <div className="px-4 pb-4">
             <p className="text-gray-800 text-sm leading-relaxed">
