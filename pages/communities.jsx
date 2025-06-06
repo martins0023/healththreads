@@ -1,10 +1,16 @@
 // pages/communities.jsx
 
 import { useEffect, useState, useRef } from "react";
-import Layout from "../components/Layout";
 import CommunityCard from "../components/CommunityCard";
+import StoryBar from "../components/StoryBar";
+import UploadStoryModal from "../components/UploadStoryModal";
+import StoryViewerModal from "../components/StoryViewerModal";
 import { showToast } from "../lib/toast";
-import { CheckBadgeIcon, PlusCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import {
+  CheckBadgeIcon,
+  PlusCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
 
 // --------------------------------------------
 // Helper: Fetch the current user (or null).
@@ -143,9 +149,7 @@ function CreateCommunityModal({
 
         {/* Modal Body / Form */}
         <form onSubmit={handleCreateGroup} className="px-4 py-4 space-y-4">
-          {createError && (
-            <p className="text-sm text-red-500">{createError}</p>
-          )}
+          {createError && <p className="text-sm text-red-500">{createError}</p>}
           <div>
             <label
               htmlFor="newName"
@@ -240,8 +244,14 @@ export default function Communities() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // — State to control the “Create Community” modal
+  // — “Create Community” modal (same as before)
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // — “Upload Story” modal
+  const [storyUploadGroupId, setStoryUploadGroupId] = useState(null);
+
+  // — “View Stories” modal
+  const [storyViewGroupId, setStoryViewGroupId] = useState(null);
 
   // 1) On mount, fetch current user
   useEffect(() => {
@@ -304,14 +314,46 @@ export default function Communities() {
     setGroups((prev) => [createdGroup, ...prev]);
   };
 
+  // 5) Extract only the groups that the current user belongs to:
+  const memberGroups = groups.filter((g) => g.isMember);
+
   return (
     <>
+      <div className="max-w-3xl mx-auto py-4 sm:px-6 lg:px-8">
+        {!loadingUser && currentUser && memberGroups.length > 0 && (
+          <StoryBar
+            memberGroups={memberGroups}
+            currentUser={currentUser}
+            onViewStories={(gid) => setStoryViewGroupId(gid)}
+            onAddStory={(gid) => setStoryUploadGroupId(gid)}
+          />
+        )}
+      </div>
+
+      {/* Upload Story Modal */}
+      <UploadStoryModal
+        isOpen={!!storyUploadGroupId}
+        onClose={() => setStoryUploadGroupId(null)}
+        groupId={storyUploadGroupId}
+        onUploaded={() => {
+          // After upload, we re‐render StoryBar so it fetches fresh stories
+          setStoryUploadGroupId(null);
+        }}
+      />
+
+      {/* View Stories Modal */}
+      <StoryViewerModal
+        isOpen={!!storyViewGroupId}
+        onClose={() => setStoryViewGroupId(null)}
+        groupId={storyViewGroupId}
+      />
       <div className="max-w-3xl mb-10 mx-auto py-5 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-4 font-grotesk">
           Health Tribes & Circles
         </h2>
         <p className="text-gray-600 mb-6">
-          Join or browse community groups (“Health Tribes”) to connect with peers.
+          Join or browse community groups (“Health Tribes”) to connect with
+          peers.
         </p>
 
         {/* — If user is a verified practitioner, show the “Create Community” button — */}
@@ -351,7 +393,8 @@ export default function Communities() {
                 {!loadingUser && currentUser && currentUser.isPractitioner && (
                   <p className="flex items-center flex-col gap-2 text-sm text-gray-600">
                     <CheckBadgeIcon className="h-6 w-6 text-blue-500" />
-                    You’re a verified practitioner—click “Create Community” above to start your first group!
+                    You’re a verified practitioner—click “Create Community”
+                    above to start your first group!
                   </p>
                 )}
               </div>
