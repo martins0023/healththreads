@@ -38,6 +38,8 @@ model User {
   QASession     QASession[]
 
   TopicFollower TopicFollower[]
+
+  Story Story[]
 }
 
 model Follow {
@@ -84,6 +86,19 @@ model Post {
   // groupId     String?
   Group   Group?  @relation(fields: [groupId], references: [id])
   groupId String?
+}
+
+model Story {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  mediaUrl   String
+  mediaType  MediaType
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  group      Group     @relation(fields: [groupId], references: [id])
+  groupId    String
+
+  @@index([groupId, createdAt])
 }
 
 model MediaAsset {
@@ -174,6 +189,8 @@ model Group {
   avatarUrl   String?
   members     GroupMember[]
   posts       Post[] // If you do group‐scoped posts, add “groupId” in Post as shown above
+
+  Story Story[]
 }
 
 model GroupMember {

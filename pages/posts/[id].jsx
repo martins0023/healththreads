@@ -154,7 +154,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
         <meta property="og:type" content="article" />
       </Head>
 
-      <div className="max-w-2xl mx-auto py-8 space-y-6">
+      <div className="max-w-2xl mb-10 mx-auto py-8 space-y-6">
         {/* Back to feed */}
         <div>
           <Link href="/" className="text-indigo-600 hover:underline">
@@ -281,7 +281,7 @@ export default function PostDetail({ post, likedByCurrentUser }) {
                 stroke="currentColor"
               >
                 <path
-                  d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4-4.86 8-4.86a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
+                  d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.92 9.92 0 01-4.832-1.29L3 20l1.29-4.832A9.92 9.92 0 013 12c0-4.97 3.582-9 8-9s8 4.03 8 9z"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"

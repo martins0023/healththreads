@@ -33,7 +33,7 @@ export default function CommunityCard({ group, onToggle }) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to update group membership.");
+        throw new Error(err.error || "Failed to update membership.");
       }
       const { action, memberCount: updatedCount } = await res.json();
       const newIsMember = action === "joined";
@@ -46,7 +46,7 @@ export default function CommunityCard({ group, onToggle }) {
           : `You left "${group.name}".`,
         newIsMember ? "success" : "info"
       );
-      // Inform parent, if it wants to refresh the overall list
+
       if (typeof onToggle === "function") {
         onToggle(group.id, newIsMember, updatedCount);
       }
@@ -59,8 +59,8 @@ export default function CommunityCard({ group, onToggle }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden flex flex-col">
-      {/* 1) Group avatar */}
+    <div className="bg-white rounded-lg shadow border border-gray-200 flex flex-col overflow-hidden">
+      {/* Avatar / Icon area */}
       <div className="flex-shrink-0 flex items-center justify-center bg-gray-100 h-24">
         {group.avatarUrl ? (
           <img
@@ -77,7 +77,7 @@ export default function CommunityCard({ group, onToggle }) {
         )}
       </div>
 
-      {/* 2) Group name + description */}
+      {/* Info + Actions */}
       <div className="flex-1 p-4 flex flex-col">
         <h3 className="text-lg font-semibold text-gray-900 truncate">
           {group.name}
@@ -90,12 +90,10 @@ export default function CommunityCard({ group, onToggle }) {
             : "No description."}
         </p>
 
-        {/* 3) Member count */}
         <p className="mt-2 text-sm text-gray-500">
           {memberCount} {memberCount === 1 ? "member" : "members"}
         </p>
 
-        {/* 4) “Join/Leave” button */}
         <button
           onClick={handleJoinToggle}
           disabled={loading}
@@ -105,11 +103,7 @@ export default function CommunityCard({ group, onToggle }) {
               : "bg-indigo-600 text-white hover:bg-indigo-700"
           } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          {loading
-            ? "…"
-            : isMember
-            ? "Joined"
-            : "Join"}
+          {loading ? "…" : isMember ? "Joined" : "Join"}
         </button>
       </div>
     </div>

@@ -85,7 +85,7 @@ export default function Feed() {
   const displayedPosts = posts.filter((p) => p.type === selectedTab);
 
   return (
-    <div>
+    <div className="mb-10">
       {/* ——— “Sign in” Banner ——— */}
       {userLoaded && !currentUser && (
         <div

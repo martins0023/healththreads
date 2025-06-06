@@ -16,7 +16,7 @@
   font-family: "Poppins", sans-serif;
 
   /* Fallback / display usage */
-  --font-display: var(--font-grotesk);
+  --font-display: var(--font-sans);
 
   background-color: var(--background-color);
   

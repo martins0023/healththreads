@@ -4,12 +4,11 @@ import prisma from "../../../lib/prisma";
 import { getUserFromToken } from "../../../lib/auth";
 
 export default async function handler(req, res) {
-  // Only allow GET
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  // 1. Authenticate user
+  // 1) Attempt to identify current user (optional)
   let user = null;
   try {
     user = await getUserFromToken(req);
@@ -17,31 +16,31 @@ export default async function handler(req, res) {
     user = null;
   }
 
-  // 2. Fetch all **public** groups (isPrivate = false)
   try {
-    // Get all groups with:
-    //   - a count of total members
-    //   - whether the current user is a member (if user exists)
+    // 2) Fetch all public groups, along with a count of members,
+    //    and whether the current user is already a member of each group.
     const groups = await prisma.group.findMany({
       where: { isPrivate: false },
       orderBy: { createdAt: "desc" },
       include: {
         _count: { select: { members: true } },
-        // If user is logged in, also include a small sub‐query to see
-        // if they belong to each group:
         members: user
-          ? { where: { userId: user.id }, select: { id: true } }
+          ? {
+              where: { userId: user.id },
+              select: { id: true },
+            }
           : false,
       },
     });
 
-    // 3. Map to a simpler payload
+    // 3) Transform into a lighter payload
     const payload = groups.map((g) => ({
       id: g.id,
       name: g.name,
       description: g.description,
       avatarUrl: g.avatarUrl || null,
       memberCount: g._count.members,
+      // if `members` array is non‐empty, current user is a member
       isMember: user ? g.members.length > 0 : false,
     }));
 

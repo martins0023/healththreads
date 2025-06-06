@@ -191,7 +191,7 @@ export default function PostCard({ post }) {
         {/* Comment (link to detail) */}
         <Link
           href={`/posts/${post.id}`}
-          className="flex items-center space-x-1 hover:text-gray-700"
+          className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

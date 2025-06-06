@@ -11,9 +11,10 @@ module.exports = {
       fontFamily: {
         satoshi: ['Satoshi', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
+        chirp: ['Chirp', 'sans'],
         sans: ['var(--font-sans)'],
         grotesk: ['var(--font-grotesk)'],
-        display: ['var(--font-display)'],
+        display: ['var(--font-sans)'],
       },
 
       animation: {

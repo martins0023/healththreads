@@ -360,8 +360,7 @@ export default function UserProfile({
                     <input
                       type="text"
                       value={profileUser.username}
-                      disabled
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-500"
                     />
                   </div>
 
