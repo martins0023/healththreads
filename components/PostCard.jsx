@@ -88,7 +88,7 @@ export default function PostCard({ post }) {
         </div>
       )}
 
-{post.type === "DEEP" ? (
+      {post.type === "DEEP" ? (
         isDetailPage ? (
           // ─── On the detail page, render full HTML safely ─────────────────
           <div

@@ -145,12 +145,14 @@ export default function Layout({ children }) {
 
             {/* Right: Post Button & Profile Icon */}
             <div className="flex items-center space-x-4">
-              <Link
-                href="/create-post"
-                className="hidden md:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                New Post
-              </Link>
+              {!currentPath.startsWith("/communities/") && (
+                <Link
+                  href="/create-post"
+                  className="hidden md:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  New Post
+                </Link>
+              )}
 
               <Link href="/profile" className="flex-shrink-0">
                 {currentUser && currentUser.avatarUrl ? (
@@ -176,13 +178,15 @@ export default function Layout({ children }) {
           {children}
 
           {/* ——— MOBILE “+” BUTTON (absolute, bottom-right) ——— */}
-          <button
-            onClick={() => router.push("/create-post")}
-            className="md:hidden fixed bottom-12 right-4 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg"
-            aria-label="Create new post"
-          >
-            <PlusIcon className="h-6 w-6" />
-          </button>
+          {!currentPath.startsWith("/communities/") && (
+            <button
+              onClick={() => router.push("/create-post")}
+              className="md:hidden fixed bottom-12 right-4 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg"
+              aria-label="Create new post"
+            >
+              <PlusIcon className="h-6 w-6" />
+            </button>
+          )}
         </main>
       </div>
 

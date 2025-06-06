@@ -1,6 +1,7 @@
 // components/CommunityCard.jsx
 
 import { useState } from "react";
+import Link from "next/link";
 import { showToast } from "../lib/toast";
 
 /**
@@ -105,6 +106,14 @@ export default function CommunityCard({ group, onToggle }) {
         >
           {loading ? "…" : isMember ? "Joined" : "Join"}
         </button>
+
+        {/* View button (only if user has joined) */}
+        {isMember && (
+          <Link href={`/communities/${group.id}`} className="mt-2 inline-flex items-center justify-center px-3 py-1.5 border border-indigo-600 text-sm font-medium rounded-full text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              View
+          </Link>
+        )}
+
       </div>
     </div>
   );

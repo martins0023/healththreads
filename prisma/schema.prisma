@@ -86,6 +86,7 @@ model Post {
   // groupId     String?
   Group   Group?  @relation(fields: [groupId], references: [id])
   groupId String?
+  GroupMember  GroupMember[] // not strictly needed here but Prisma requires at least one side
 }
 
 model Story {
@@ -202,6 +203,7 @@ model GroupMember {
   groupId  String
 
   @@unique([userId, groupId])
+  Post Post[]
 }
 
 model Topic {
