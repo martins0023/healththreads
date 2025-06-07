@@ -53,6 +53,10 @@ export default function UserProfile({
   const avatarInputRef = useRef();
   const coverInputRef = useRef();
 
+  //track follow state & count
+  const [isFollowing, setIsFollowing] = useState(stats.isFollowing);
+  const [followerCount, setFollowerCount] = useState(stats.followerCount);
+
   // 1) “Date Joined” formatted as “MMMM yyyy”
   const joinedDate = format(new Date(profileUser.createdAt), "LLLL yyyy");
 
@@ -235,12 +239,40 @@ export default function UserProfile({
             <p className="text-sm text-gray-500">@{profileUser.username}</p>
           </div>
           {/* If viewing someone else’s profile, show a “Follow” button */}
-          {!isOwnProfile && (
-            <button className="px-4 py-1 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
-              Follow
-            </button>
-          )}
         </div>
+        {!isOwnProfile && (
+          <div className="flex justify-end items-center space-x-4 px-4">
+            <span className="text-sm text-gray-600">
+              {followerCount} follower{followerCount === 1 ? "" : "s"}
+            </span>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/follow/${profileUser.id}`, {
+                    method: "POST",
+                    credentials: "include",
+                  });
+                  if (!res.ok)
+                    throw new Error("Could not update follow status");
+                  const { isFollowing: nowFollowing, followerCount: newCount } =
+                    await res.json();
+                  setIsFollowing(nowFollowing);
+                  setFollowerCount(newCount);
+                } catch (err) {
+                  console.error(err);
+                  showToast(err.message || "Error toggling follow", "error");
+                }
+              }}
+              className={`px-4 py-1 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                isFollowing
+                  ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+              }`}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </button>
+          </div>
+        )}
         {/* ─── “Date Joined” Line ───────────────────────────────────────────────── */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center space-x-2 px-4 text-sm text-gray-600">
@@ -520,6 +552,19 @@ export async function getServerSideProps(context) {
     // Not signed in or error → isOwnProfile remains false
   }
 
+  let isFollowing = false;
+  if (!isOwnProfile && viewerId) {
+    const f = await prisma.follow.findUnique({
+      where: {
+        followerId_followedId: {
+          followerId: viewerId,
+          followedId: profileUser.id,
+        },
+      },
+    });
+    isFollowing = !!f;
+  }
+
   // 3) Fetch up to 20 THREAD posts by this user, most‐recent first
   let threadPosts = await prisma.post.findMany({
     where: {
@@ -618,7 +663,7 @@ export async function getServerSideProps(context) {
       isOwnProfile,
       threadPosts: JSON.parse(JSON.stringify(threadPosts)),
       deepPosts: JSON.parse(JSON.stringify(deepPosts)),
-      stats,
+      stats: { ...stats, followerCount, isFollowing }
     },
   };
 }

@@ -1,11 +1,14 @@
 // pages/messages.jsx
-
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Layout from "../components/Layout";
 import ConversationsList from "../components/ConversationsList";
-import ChatWindow from "../components/ChatWindow";
+
+const ChatWindow = dynamic(() => import("../components/ChatWindow"), {
+  ssr: false,
+});
 
 export default function MessagesPage() {
   const [selectedUser, setSelectedUser] = useState(null);
@@ -59,21 +62,21 @@ export default function MessagesPage() {
 
         {/* Mobile header + list */}
         <div className="flex-1 flex flex-col">
-        <div className="md:hidden border-b border-gray-200 px-4 py-3">
-          <h2 className="text-xl font-semibold font-grotesk">Chats</h2>
-        </div>
-        <div className="md:hidden">
-          <ConversationsList
-            onSelectConversation={setSelectedUser}
-            selectedUserId={selectedUser?.id}
-          />
-        </div>
+          <div className="md:hidden border-b border-gray-200 px-4 py-3">
+            <h2 className="text-xl font-semibold font-grotesk">Chats</h2>
+          </div>
+          <div className="md:hidden">
+            <ConversationsList
+              onSelectConversation={setSelectedUser}
+              selectedUserId={selectedUser?.id}
+            />
+          </div>
 
-        {/* Chat window */}
-        <div className="flex-1">
-          <ChatWindow partner={selectedUser} viewerId={viewer.id} />
+          {/* Chat window */}
+          <div className="flex-1">
+            <ChatWindow partner={selectedUser} viewerId={viewer.id} />
+          </div>
         </div>
-      </div>
       </div>
     </>
   );

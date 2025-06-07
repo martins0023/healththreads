@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import Loading from "./Loading";
 
 /**
  * Props:
@@ -105,9 +106,7 @@ export default function StoryViewerModal({ isOpen, onClose, groupId }) {
   if (!isOpen) return null;
   if (loadingList) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        <p className="text-white">Loading stories…</p>
-      </div>
+      <Loading message="Loading stories…" />
     );
   }
   if (!stories.length) {

@@ -1,9 +1,7 @@
 // components/Layout.jsx
-
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { UserCircleIcon, SearchIcon } from "lucide-react";
 import {
   BellIcon,
   ChatBubbleBottomCenterIcon,
@@ -12,6 +10,7 @@ import {
   UserGroupIcon,
   PlusIcon, // ← we’ll use Heroicons’ Plus
 } from "@heroicons/react/24/outline";
+import SearchBox from "./SearchBox";
 
 export default function Layout({ children }) {
   const router = useRouter();
@@ -118,15 +117,8 @@ export default function Layout({ children }) {
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             {/* Left: Search / Tabs */}
             <div className="flex-1 flex items-center space-x-4">
-              <div className="relative w-full max-w-xs">
-                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                  <SearchIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search HealthThread…"
-                  className="block w-full pl-8 pr-3 py-2 border border-gray-300 bg-white rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
+              <div className="flex-1">
+                <SearchBox />
               </div>
 
               {/* Tabs (unchanged) */}
