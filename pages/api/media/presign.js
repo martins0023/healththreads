@@ -26,28 +26,38 @@ export default async function handler(req, res) {
   }
 
   // Expect ?type=image or video or audio, and client should pass an optional filename
-  const { type, filename } = req.query;
-  if (!type || !["image", "video", "audio"].includes(type)) {
+  const { type, filename, mimeType } = req.query;
+  if (!type || !["image", "video", "audio", "file"].includes(type)) {
     return res.status(400).json({ error: "Invalid or missing media type" });
   }
 
   // Derive file extension from filename (if provided), otherwise default by type
-  const ext = filename?.split(".").pop().toLowerCase() || {
-    image: "png",
-    video: "mp4",
-    audio: "mp3",
-  }[type];
+  let ext = filename?.split(".").pop().toLowerCase();
+  if (!ext) {
+    ext = {
+      image: "png",
+      video: "mp4",
+      audio: "mp3",
+      file: filename?.split(".").pop().toLowerCase() || "bin",
+    }[type];
+  }
 
   // Construct a unique S3 key: e.g., public/uploads/userId/uuid.ext
   const key = `public/uploads/${user.id}/${uuidv4()}.${ext}`;
 
   // Determine content type (MIME) based on extension
-  let contentType = "";
-  if (type === "image") contentType = `image/${ext}`;
-  else if (type === "video") contentType = `video/${ext}`;
-  else if (type === "audio") contentType = `audio/${ext}`;
+  let contentType = mimeType || "";
+  if (!contentType) {
+    if (type === "image") contentType = `image/${ext}`;
+    else if (type === "video") contentType = `video/${ext}`;
+    else if (type === "audio") contentType = `audio/${ext}`;
+    else contentType = "application/octet-stream";
+  }
 
   const bucketName = process.env.S3_BUCKET_NAME;
+  if (!bucketName) {
+    return res.status(500).json({ error: "Missing S3_BUCKET_NAME" });
+  }
 
   try {
     // Create a presigned PUT command valid for 5 minutes

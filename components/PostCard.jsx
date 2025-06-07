@@ -62,11 +62,13 @@ export default function PostCard({ post }) {
     <article className="bg-white shadow-sm rounded-lg mb-4 overflow-hidden">
       {/* Header */}
       <div className="flex items-center px-4 py-3">
-        <img
-          src={post.author.avatarUrl || "/avatars/default-pic.jpg"}
-          alt={post.author.name}
-          className="h-10 w-10 rounded-full object-cover"
-        />
+        <Link href={`/profile`}>
+          <img
+            src={post.author.avatarUrl || "/avatars/default-pic.jpg"}
+            alt={post.author.name}
+            className="h-10 w-10 rounded-full object-cover"
+          />
+        </Link>
         <div className="ml-3">
           <p className="flex items-center text-sm font-medium text-gray-900">
             {post.author.name}

@@ -63,7 +63,9 @@ export async function getServerSideProps(context) {
   const rawPosts = await prisma.post.findMany({
     where: { groupId: groupId },
     include: {
-      author: { select: { id: true, name: true, avatarUrl: true } },
+      author: {
+        select: { id: true, name: true, avatarUrl: true, isPractitioner: true },
+      },
       mediaAssets: true,
     },
     orderBy: { createdAt: "desc" },
@@ -84,11 +86,24 @@ export async function getServerSideProps(context) {
     likedSet = new Set(likedMap.map((l) => l.postId));
   }
 
-  // 5) Serialize each post (Date → ISO) & mark likedByCurrentUser
+  // 5) Serialize each post (convert Date → ISO) & mark likedByCurrentUser
   const posts = rawPosts.map((p) => ({
     id: p.id,
-    author: p.author,
-    mediaAssets: p.mediaAssets,
+    author: {
+      id: p.author.id,
+      name: p.author.name,
+      avatarUrl: p.author.avatarUrl,
+      isPractitioner: p.author.isPractitioner,
+    },
+    mediaAssets: p.mediaAssets.map((a) => ({
+      id: a.id,
+      url: a.url,
+      type: a.type,
+      width: a.width,
+      height: a.height,
+      durationSec: a.durationSec,
+      createdAt: a.createdAt.toISOString(),
+    })),
     textContent: p.textContent,
     type: p.type,
     createdAt: p.createdAt.toISOString(),
