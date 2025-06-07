@@ -2,7 +2,7 @@
 
 import Lottie from "lottie-react";
 import PropTypes from "prop-types";
-import Load from "../public/animations/Loading.json"; // ensure you have this
+import Load from "../public/animations/loading.json"; // ensure you have this
 
 export default function Loading({
   message = "Select a conversation to start chatting.",

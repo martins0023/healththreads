@@ -129,16 +129,16 @@ export default function PostCard({ post }) {
         // ─── THREADS (short posts) render normal text content ─────────────────────────
         post.textContent && (
           <div className="px-4 pb-4">
-            <p className="text-gray-800 text-sm leading-relaxed">
+            <Link href={`/posts/${post.id}`} className="text-gray-800 text-sm leading-relaxed">
               {post.textContent}
-            </p>
+            </Link>
           </div>
         )
       )}
 
       {/* Media Assets */}
       {post.mediaAssets && post.mediaAssets.length > 0 && (
-        <div className="px-4 pb-4 space-y-4">
+        <Link href={`/posts/${post.id}`} className="px-4 pb-4 space-y-4">
           {post.mediaAssets.map((media) => {
             if (media.type === "IMAGE") {
               return (
@@ -172,7 +172,7 @@ export default function PostCard({ post }) {
             }
             return null;
           })}
-        </div>
+        </Link>
       )}
 
       {/* Footer: Like / Comment / Share */}
