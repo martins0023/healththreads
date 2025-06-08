@@ -6,6 +6,7 @@ import { useFeed } from "../lib/useFeed";
 import { useRouter } from "next/router";
 import EmptyFeed from "./EmptyFeed";
 import Loading from "./Loading";
+import FollowSuggestions from "./FollowSuggestions";
 
 export default function Feed() {
   const router = useRouter();
@@ -94,7 +95,10 @@ export default function Feed() {
 
   if (!isLoadingInitialData && posts.length === 0) {
     return (
-      <EmptyFeed message="No posts found. Follow some people or create one!" />
+      <div className="mb-10">
+        <EmptyFeed message="Your feed is empty." />
+        <FollowSuggestions limit={5} />
+      </div>
     );
   }
 

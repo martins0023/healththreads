@@ -9,8 +9,8 @@ import EmptyState from "./EmptyState";
 export default function ChatWindow({ partner, viewerId }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);           // ← add typing state
-  const typingTimeoutRef = useRef(null);                      // ← timeout ref
+  const [isTyping, setIsTyping] = useState(false); // ← add typing state
+  const typingTimeoutRef = useRef(null); // ← timeout ref
   const scrollRef = useRef();
 
   const channelName =
@@ -94,9 +94,7 @@ export default function ChatWindow({ partner, viewerId }) {
     if (!partner || messages.length === 0) return;
     const hasUnread = messages.some(
       (m) =>
-        m.senderId === partner.id &&
-        m.recipientId === viewerId &&
-        !m.isRead
+        m.senderId === partner.id && m.recipientId === viewerId && !m.isRead
     );
     if (!hasUnread) return;
 
@@ -115,15 +113,13 @@ export default function ChatWindow({ partner, viewerId }) {
   }, [messages, partner, viewerId]);
 
   if (!partner) {
-    return (
-      <EmptyState message="Select a conversation to start chatting." />
-    );
+    return <EmptyState message="Select a conversation to start chatting." />;
   }
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center px-4 py-3 border-b border-gray-200 bg-white">
+      <div className="flex items-center px-4 py-3 border-b border-gray-200 ">
         <img
           src={partner.avatarUrl || "/avatars/default-pic.jpg"}
           alt={partner.name}
@@ -142,10 +138,7 @@ export default function ChatWindow({ partner, viewerId }) {
       )}
 
       {/* Messages */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-3 bg-white"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 ">
         {loading ? (
           <div className="text-center text-gray-500">Loading…</div>
         ) : messages.length === 0 ? (

@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Pusher from "pusher-js";
 import { showToast } from "../lib/toast";
+import { Send } from "lucide-react";
 
 // Initialize Pusher client (only once)
 const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
@@ -21,11 +22,7 @@ const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
  *   - onMessageSent: (msg) => void
  *   - viewerId: string     // our own user ID
  */
-export default function MessageInput({
-  recipientId,
-  onMessageSent,
-  viewerId,
-}) {
+export default function MessageInput({ recipientId, onMessageSent, viewerId }) {
   const [text, setText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -124,8 +121,7 @@ export default function MessageInput({
   const uploadToS3 = async (file, mediaType, mimeType) => {
     const query = new URLSearchParams({
       type: mediaType,
-      filename:
-        file.name || `recording.${mimeType?.split("/")[1] || "webm"}`,
+      filename: file.name || `recording.${mimeType?.split("/")[1] || "webm"}`,
       mimeType,
     });
     const presignRes = await fetch(`/api/media/presign?${query.toString()}`, {
@@ -199,7 +195,7 @@ export default function MessageInput({
   };
 
   return (
-    <div className="border-t border-gray-200 px-4 py-2 flex items-center space-x-2 bg-white">
+    <div className="border-t mb-10 border-gray-200 px-4 py-2 flex items-center space-x-2 ">
       <button
         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
         onClick={() => fileInputRef.current?.click()}
@@ -212,9 +208,7 @@ export default function MessageInput({
         className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
           isRecording ? "text-red-500" : "text-gray-500"
         }`}
-        onClick={() =>
-          isRecording ? stopRecording() : startRecording()
-        }
+        onClick={() => (isRecording ? stopRecording() : startRecording())}
         title={isRecording ? "Stop recording" : "Record audio"}
       >
         <MicrophoneIcon className="h-5 w-5" />
@@ -240,11 +234,7 @@ export default function MessageInput({
               />
             )}
             {selectedFile.type.startsWith("audio/") && (
-              <audio
-                src={previewUrl}
-                controls
-                className="h-10 w-full"
-              />
+              <audio src={previewUrl} controls className="h-10 w-full" />
             )}
             {selectedFile.type.startsWith("video/") && (
               <video
@@ -278,18 +268,14 @@ export default function MessageInput({
 
       <button
         onClick={handleSend}
-        disabled={
-          (!text.trim() && !selectedFile) || uploading || isRecording
-        }
+        disabled={(!text.trim() && !selectedFile) || uploading || isRecording}
         className={`p-2 rounded-full ${
-          (text.trim() || selectedFile) &&
-          !uploading &&
-          !isRecording
+          (text.trim() || selectedFile) && !uploading && !isRecording
             ? "bg-indigo-600 hover:bg-indigo-700"
             : "bg-gray-300 cursor-not-allowed"
         } text-white`}
       >
-        Send
+        <Send />
       </button>
 
       <input

@@ -11,6 +11,7 @@ import {
   PlusIcon, // ← we’ll use Heroicons’ Plus
 } from "@heroicons/react/24/outline";
 import SearchBox from "./SearchBox";
+import LogoutButton from "./LogoutButton";
 
 export default function Layout({ children }) {
   const router = useRouter();
@@ -83,7 +84,7 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-gray-200">
+        <div className="flex flex-col px-4 py-4 border-t border-gray-200 gap-2">
           <Link href="/profile" className="flex items-center space-x-3">
             {/*
               If `currentUser` is loaded and has `avatarUrl`, show it;
@@ -107,6 +108,7 @@ export default function Layout({ children }) {
               <p className="text-xs text-gray-500 truncate">View settings</p>
             </div>
           </Link>
+          <LogoutButton />
         </div>
       </aside>
 
@@ -116,7 +118,7 @@ export default function Layout({ children }) {
         <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
             {/* Left: Search / Tabs */}
-            <div className="flex-1 flex items-center space-x-4">
+            <div className="flex items-center space-x-4">
               <div className="flex-1">
                 <SearchBox />
               </div>
@@ -170,15 +172,16 @@ export default function Layout({ children }) {
           {children}
 
           {/* ——— MOBILE “+” BUTTON (absolute, bottom-right) ——— */}
-          {!currentPath.startsWith("/communities/") && (
-            <button
-              onClick={() => router.push("/create-post")}
-              className="md:hidden fixed bottom-12 right-4 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg"
-              aria-label="Create new post"
-            >
-              <PlusIcon className="h-6 w-6" />
-            </button>
-          )}
+          {!currentPath.startsWith("/communities/") &&
+            currentPath !== "/messages" && currentPath !== "/signin" && currentPath !== "/signup" && ( // ← don’t show on messages page
+              <button
+                onClick={() => router.push("/create-post")}
+                className="md:hidden fixed bottom-12 right-4 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg z-10"
+                aria-label="Create new post"
+              >
+                <PlusIcon className="h-6 w-6" />
+              </button>
+            )}
         </main>
       </div>
 
@@ -191,7 +194,7 @@ export default function Layout({ children }) {
               <Link
                 key={name}
                 href={href}
-                className="w-full inline-flex flex-col items-center justify-center py-2"
+                className="w-full inline-flex flex-col items-center justify-center py-4"
               >
                 <Icon
                   className={`h-6 w-6 ${
