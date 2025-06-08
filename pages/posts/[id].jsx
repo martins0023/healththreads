@@ -156,11 +156,11 @@ export default function PostDetail({ post, likedByCurrentUser }) {
 
       <div className="max-w-2xl mb-10 mx-auto py-8 space-y-6">
         {/* Back to feed */}
-        <div>
+        {/* <div>
           <Link href="/" className="text-indigo-600 hover:underline">
             &larr; Back to Feed
           </Link>
-        </div>
+        </div> */}
 
         {/* Post Content */}
         <article className="bg-white shadow-sm rounded-lg overflow-hidden">
