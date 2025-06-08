@@ -166,11 +166,12 @@ export default function CreatePost() {
 
       const postRes = await fetch("/api/posts", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postPayload),
       });
       if (!postRes.ok) {
-        const err = await postRes.json();
+        const err = await postRes.json().catch(() => ({}));
         throw new Error(err.error || "Failed to create post");
       }
       const { post: newPost } = await postRes.json();
