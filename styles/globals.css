@@ -1,10 +1,8 @@
 /* 1. Import Google Fonts */
-@import url('/fonts/chirp.css'); /* Load Chirp first */
+@import url('/fonts/chirp.css');
+/* Load Chirp first */
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 /* styles/globals.css */
-@import "leaflet/dist/leaflet.css";
-@import "leaflet.markercluster/dist/MarkerCluster.css";
-@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 @tailwind base;
 @tailwind components;
@@ -16,25 +14,29 @@
 
   /* Secondary / Headline font: Space Grotesk */
   --font-grotesk: 'Space Grotesk', sans-serif;
-  
+
   font-family: "Poppins", sans-serif;
 
   /* Fallback / display usage */
   --font-display: var(--font-sans);
 
   background-color: var(--background-color);
-  
+
   color: var(--text-color);
 }
 
 .dark {
-  --background-color: #121212; /* dark mode background */
-  --text-color: #ffffff; /* dark mode text */
+  --background-color: #121212;
+  /* dark mode background */
+  --text-color: #ffffff;
+  /* dark mode text */
 }
 
 .light {
-  --background-color: #ffffff; /* light mode background */
-  --text-color: #000000; /* light mode text */
+  --background-color: #ffffff;
+  /* light mode background */
+  --text-color: #000000;
+  /* light mode text */
 }
 
 .leaflet-container {
@@ -57,4 +59,16 @@
 
 .gm-style .gm-style-iw-d {
   overflow: auto !important;
+}
+
+/* styles/globals.css */
+.gm-style .gm-style-iw-c {
+  border-radius: 10px !important;
+  padding: 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: auto !important;
+  max-height: none !important;
 }
