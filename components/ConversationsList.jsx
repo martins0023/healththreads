@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
+import Loading from "./Loading"
 
 export default function ConversationsList({ onSelectConversation, selectedUserId }) {
   const [conversations, setConversations] = useState([]);
@@ -25,7 +26,7 @@ export default function ConversationsList({ onSelectConversation, selectedUserId
   }, []);
 
   if (loading) {
-    return <div className="p-4 text-center text-gray-500">Loading…</div>;
+    return <Loading message="Loading conversations…" />;
   }
 
   if (conversations.length === 0) {

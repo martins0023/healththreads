@@ -9,8 +9,8 @@ import EmptyState from "./EmptyState";
 export default function ChatWindow({ partner, viewerId }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isTyping, setIsTyping] = useState(false); // ← add typing state
-  const typingTimeoutRef = useRef(null); // ← timeout ref
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
   const scrollRef = useRef();
 
   const channelName =
@@ -54,6 +54,8 @@ export default function ChatWindow({ partner, viewerId }) {
     const channel = pusher.subscribe(channelName);
 
     channel.bind("new-message", (newMsg) => {
+      // **ignore messages we ourselves just sent**
+      if (newMsg.senderId === viewerId) return;
       setMessages((prev) => [...prev, newMsg]);
       setTimeout(() => {
         scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
@@ -70,7 +72,7 @@ export default function ChatWindow({ partner, viewerId }) {
       );
     });
 
-    // ← listen for typing events
+    // typing indicator
     channel.bind("typing", ({ from }) => {
       if (from === partner.id) {
         setIsTyping(true);
@@ -94,7 +96,9 @@ export default function ChatWindow({ partner, viewerId }) {
     if (!partner || messages.length === 0) return;
     const hasUnread = messages.some(
       (m) =>
-        m.senderId === partner.id && m.recipientId === viewerId && !m.isRead
+        m.senderId === partner.id &&
+        m.recipientId === viewerId &&
+        !m.isRead
     );
     if (!hasUnread) return;
 
@@ -159,6 +163,7 @@ export default function ChatWindow({ partner, viewerId }) {
       <MessageInput
         recipientId={partner.id}
         onMessageSent={(msg) => {
+          // only our optimistic add here
           setMessages((prev) => [...prev, msg]);
           setTimeout(() => {
             scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
