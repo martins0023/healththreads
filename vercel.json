@@ -1,0 +1,9 @@
+
+{
+    "crons": [
+      {
+        "path": "/api/ingest-health-news", 
+        "schedule": "0 * * * *"           
+      }
+    ]
+  }

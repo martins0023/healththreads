@@ -1,6 +1,7 @@
 // components/Feed.jsx
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Share2, Heart, MessageCircle, Repeat } from "lucide-react"; // For modern icons
 import PostCard from "./PostCard";
 import { useFeed } from "../lib/useFeed";
 import { useRouter } from "next/router";
@@ -18,6 +19,36 @@ export default function Feed() {
   const { posts, error, size, setSize, isValidating, isLoadingMore, hasMore } =
     useFeed(pageSize);
 
+  const formatPostDate = (dateString) => {
+    if (!dateString) return "Date Unknown"; // Handle undefined or null dateString
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid Date"; // Handle invalid date strings
+
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime()); // Use getTime() for reliable difference
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 60) {
+      return diffMinutes <= 1 ? "just now" : `${diffMinutes}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else if (diffDays === 1) {
+      return "Yesterday";
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else if (diffDays < 30) {
+      return `${Math.floor(diffDays / 7)}w ago`;
+    }
+    // Fallback for older dates: Month Day, Year (e.g., Jun 12, 2025)
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   // new state for health-news:
   const [newsPage, setNewsPage] = useState(0);
   const [news, setNews] = useState([]);
@@ -27,7 +58,7 @@ export default function Feed() {
   // when we switch to HealthNews tab, fetch page
   const fetchNews = async (page) => {
     setNewsLoading(true);
-    const res = await fetch(`/api/health-news?limit=20&page=${page}`);
+    const res = await fetch(`/api/health-news?limit=10&page=${page}`);
     const json = await res.json();
     setNews((prev) => (page === 0 ? json.news : [...prev, ...json.news]));
     setNewsHasMore(json.hasMore);
@@ -159,30 +190,112 @@ export default function Feed() {
           // render a news card
           const isLast = idx === displayedPosts.length - 1;
           return (
-            <div key={item.id} ref={isLast ? lastPostRef : null}>
-              <div className="bg-white p-4 mb-4 rounded-lg shadow">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold text-indigo-600">
-                    {item.source}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(item.publishedAt).toLocaleString()}
-                  </span>
+            <div
+              className="mb-4"
+              key={item.id}
+              ref={isLast ? lastPostRef : null}
+            >
+              <div className="bg-white rounded-xl shadow-md overflow-hidden border border-neutral-200 hover:shadow-lg transition-shadow duration-200">
+                <div className="p-4 flex flex-col space-y-2">
+                  {/* Source and Published Date */}
+                  <div className="flex justify-between items-center text-sm font-medium text-neutral-500">
+                    <span className="text-blue-600 font-semibold">
+                      {item.source || "Unknown Source"}
+                    </span>
+                    <span className="text-neutral-500">
+                      {formatPostDate(item.publishedAt)}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-lg font-semibold text-gray-800 leading-tight">
+                    <a
+                      href={item.url || "#"} // Fallback to '#' if url is missing
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      {item.title || "No Title Available"}
+                    </a>
+                  </h3>
+
+                  {/* Summary */}
+                  <p className="text-gray-800 text-sm leading-relaxed line-clamp-3">
+                    {item.summary || "No summary available."}
+                  </p>
+
+                  {/* Reaction and Share Buttons */}
+                  <div className="flex justify-around items-center pt-3 border-t border-neutral-100 mt-4">
+                    {/* Likes/Heart Button */}
+                    <button
+                      className="flex items-center text-neutral-500 hover:text-red-500 transition-colors duration-200 focus:outline-none"
+                      onClick={() => console.log("Like clicked for:", item.id)} // Placeholder action
+                    >
+                      <Heart className="h-5 w-5 mr-1" />
+                      <span className="text-sm">
+                        {item.likes != null ? item.likes : 0}
+                      </span>{" "}
+                      {/* Display likes count */}
+                    </button>
+
+                    {/* Comments Button */}
+                    <button
+                      className="flex items-center text-neutral-500 hover:text-blue-500 transition-colors duration-200 focus:outline-none"
+                      onClick={() =>
+                        console.log("Comment clicked for:", item.id)
+                      } // Placeholder action
+                    >
+                      <MessageCircle className="h-5 w-5 mr-1" />
+                      <span className="text-sm">
+                        {item.comments != null ? item.comments : 0}
+                      </span>{" "}
+                      {/* Display comments count */}
+                    </button>
+
+                    {/* Share/Retweet Button */}
+                    <button
+                      className="flex items-center text-neutral-500 hover:text-green-500 transition-colors duration-200 focus:outline-none"
+                      onClick={() => console.log("Share clicked for:", item.id)} // Placeholder action
+                    >
+                      <Repeat className="h-5 w-5 mr-1" />
+                      <span className="text-sm">
+                        {item.shares != null ? item.shares : 0}
+                      </span>{" "}
+                      {/* Display shares count */}
+                    </button>
+
+                    {/* Generic Share Button (e.g., via Web Share API) */}
+                    <button
+                      className="flex items-center text-neutral-500 hover:text-gray-900 transition-colors duration-200 focus:outline-none"
+                      onClick={() => {
+                        const shareData = {
+                          title: item.title || "Health News",
+                          text: item.summary || "",
+                          url: item.url || window.location.href, // Fallback to current URL if item.url is missing
+                        };
+                        if (navigator.share) {
+                          navigator
+                            .share(shareData)
+                            .then(() => console.log("Successful share"))
+                            .catch((error) =>
+                              console.log("Error sharing", error)
+                            );
+                        } else {
+                          // Fallback for browsers that don't support Web Share API
+                          navigator.clipboard.writeText(shareData.url); // Copy URL to clipboard
+                          // Using a simple message, not alert() as per instructions
+                          console.log(
+                            "Link copied to clipboard:",
+                            shareData.url
+                          );
+                          // You might display a temporary message in the UI here instead of alert.
+                        }
+                      }}
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-                <h3 className="mt-2 text-lg font-medium text-gray-900">
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-gray-700 text-sm line-clamp-3">
-                  {item.summary}
-                </p>
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-block text-indigo-600 hover:underline text-sm"
-                >
-                  Read more
-                </a>
               </div>
             </div>
           );

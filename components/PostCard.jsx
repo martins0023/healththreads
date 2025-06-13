@@ -129,7 +129,10 @@ export default function PostCard({ post }) {
         // ─── THREADS (short posts) render normal text content ─────────────────────────
         post.textContent && (
           <div className="px-4 pb-4">
-            <Link href={`/posts/${post.id}`} className="text-gray-800 text-sm leading-relaxed">
+            <Link
+              href={`/posts/${post.id}`}
+              className="text-gray-800 text-sm leading-relaxed"
+            >
               {post.textContent}
             </Link>
           </div>
@@ -214,44 +217,43 @@ export default function PostCard({ post }) {
 
         {/* Share */}
         <button
-  onClick={async () => {
-    const shareUrl = `${window.location.origin}/posts/${post.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: post.title || "Check out this post",
-          text: post.textContent?.slice(0, 100) || "",
-          url: shareUrl,
-        });
-        showToast("Thanks for sharing!", "success");
-      } catch (err) {
-        // user probably cancelled share sheet
-        console.warn("Share cancelled or failed", err);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        showToast("Post link copied to clipboard!", "info");
-      } catch (err) {
-        console.error("Clipboard write failed", err);
-        showToast("Could not copy link", "error");
-      }
-    }
-  }}
-  className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-6 6h3v2a2 2 0 002 2z" />
-  </svg>
-  <span>Share</span>
-</button>
-
+          onClick={async () => {
+            const shareUrl = `${window.location.origin}/posts/${post.id}`;
+            if (navigator.share) {
+              try {
+                await navigator.share({
+                  title: post.title || "Check out this post",
+                  text: post.textContent?.slice(0, 100) || "",
+                  url: shareUrl,
+                });
+                showToast("Thanks for sharing!", "success");
+              } catch (err) {
+                // user probably cancelled share sheet
+                console.warn("Share cancelled or failed", err);
+              }
+            } else {
+              try {
+                await navigator.clipboard.writeText(shareUrl);
+                showToast("Post link copied to clipboard!", "info");
+              } catch (err) {
+                console.error("Clipboard write failed", err);
+                showToast("Could not copy link", "error");
+              }
+            }
+          }}
+          className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-6 6h3v2a2 2 0 002 2z" />
+          </svg>
+          <span>Share</span>
+        </button>
       </div>
     </article>
   );

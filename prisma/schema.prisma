@@ -307,7 +307,7 @@ model HealthNews {
   id          String   @id @default(uuid())
   title       String
   summary     String
-  url         String // link to external source
+  url         String   @unique// link to external source
   source      String // e.g. NEJM, WHO
   publishedAt DateTime
   createdAt   DateTime @default(now())

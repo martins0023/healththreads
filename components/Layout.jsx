@@ -17,6 +17,11 @@ export default function Layout({ children }) {
   const router = useRouter();
   const currentPath = router.pathname;
 
+  // ** If on signin/signup, render only the page (no navs) **
+  if (["/signin", "/signup"].includes(currentPath)) {
+    return <>{children}</>;
+  }
+
   // State to hold the current user's data
   const [currentUser, setCurrentUser] = useState(null);
 
